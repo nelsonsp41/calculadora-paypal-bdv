@@ -1,0 +1,17 @@
+{
+  "background_color": "#ffffff",
+  "description": "Calculadora de comisiones PayPal (4.5%) y Banco de Venezuela (2.5%) para pagos con tarjeta electrónica en USD",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Calculadora Paypal BDV",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "CalcPaypal",
+  "start_url": "/",
+  "theme_color": "#003087",
+  "id": "calculadora-paypal-v1",
+  "lang": "es",
+  "categories": [
+    "finance"
+  ]
+}
