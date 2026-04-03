@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>PayPal BDV · Calculadora móvil</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: system-ui, 'Segoe UI', 'Roboto', -apple-system, Helvetica, sans-serif;
+            padding: 12px;
+        }
+
+        /* Tarjeta principal: tamaño compacto pero legible, sin scroll vertical */
+        .calculator-card {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header más pequeño pero con presencia */
+        .header {
+            background: #003087;
+            padding: 14px 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .header p {
+            font-size: 0.7rem;
+            opacity: 0.85;
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        /* Contenido principal: padding reducido para evitar scroll */
+        .content {
+            padding: 18px 20px 16px;
+        }
+
+        /* Switch de dos modos más compacto */
+        .modo-switch {
+            background: #f1f5f9;
+            border-radius: 60px;
+            display: flex;
+            gap: 6px;
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modo-option {
+            flex: 1;
+            text-align: center;
+            padding: 8px 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            border-radius: 40px;
+            cursor: pointer;
+            background: transparent;
+            color: #1e293b;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        /* en móvil si el texto es largo, permitimos wrap en pantallas muy estrechas */
+        @media (max-width: 440px) {
+            .modo-option {
+                font-size: 0.72rem;
+                white-space: normal;
+                word-break: keep-all;
+                padding: 7px 4px;
+            }
+        }
+
+        .modo-option.active {
+            background: #003087;
+            color: white;
+            box-shadow: 0 2px 6px rgba(0, 48, 135, 0.25);
+        }
+
+        /* Grupo de entrada reducido pero cómodo */
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #0f172a;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .input-wrapper {
+            background: #f1f5f9;
+            border-radius: 28px;
+            padding: 4px 16px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #003087;
+            box-shadow: 0 0 0 2px rgba(0, 48, 135, 0.2);
+        }
+
+        .currency-symbol {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-right: 8px;
+        }
+
+        input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 1.3rem;
+            font-weight: 600;
+            padding: 10px 0;
+            outline: none;
+            color: #0f172a;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        input::-webkit-inner-spin-button,
+        input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Botón más ajustado */
+        button {
+            background: #003087;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 44px;
+            cursor: pointer;
+            margin: 6px 0 16px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        button:active {
+            transform: scale(0.97);
+            background: #002266;
+        }
+
+        /* Caja de resultados compacta, con espaciado reducido */
+        .results {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 12px 16px;
+            border: 1px solid #eef2ff;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 8px 0;
+            border-bottom: 1px dashed #dce3ec;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+            padding-bottom: 4px;
+        }
+
+        .result-label {
+            font-weight: 500;
+            font-size: 0.8rem;
+            color: #334155;
+        }
+
+        .result-value {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #0f172a;
+        }
+
+        .highlight {
+            color: #003087;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        /* Badge pequeño sin ocupar mucho espacio */
+        .badge {
+            background: #eef2ff;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            margin-top: 12px;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Footer más liviano */
+        .footer {
+            font-size: 0.65rem;
+            text-align: center;
+            border-top: 1px solid #eef2f8;
+            padding: 12px 16px;
+            color: #5b6e8c;
+            background: white;
+        }
+
+        /* Ajustes extremos para pantallas pequeñas (iPhone SE, etc) */
+        @media (max-width: 400px) {
+            .content {
+                padding: 14px 16px 12px;
+            }
+            .result-label {
+                font-size: 0.75rem;
+            }
+            .result-value {
+                font-size: 0.95rem;
+            }
+            .highlight {
+                font-size: 1.05rem;
+            }
+            .modo-option {
+                font-size: 0.68rem;
+                padding: 6px 3px;
+            }
+            button {
+                padding: 10px;
+                font-size: 0.9rem;
+                margin: 4px 0 14px;
+            }
+            .results {
+                padding: 10px 12px;
+            }
+            .result-row {
+                padding: 6px 0;
+            }
+        }
+
+        /* Ajuste para evitar scroll vertical total: aseguramos que el body no desborde */
+        html, body {
+            height: auto;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+<div class="calculator-card">
+    <div class="header">
+        <h1>CALCULADORA PAYPAL - BDV</h1>
+        <p>Comisiones PayPal (4.5%) + Banco de Venezuela (2.5%)</p>
+    </div>
+    <div class="content">
+        <!-- Selector de modo compacto -->
+        <div class="modo-switch" id="modoSwitch">
+            <div class="modo-option active" data-modo="recibir">📥 RECIBIR</div>
+            <div class="modo-option" data-modo="enviar">📤 ENVIAR</div>
+        </div>
+
+        <!-- Grupo de entrada -->
+        <div class="input-group">
+            <label id="inputLabel">💰 Monto que la otra persona DEBE RECIBIR (neto):</label>
+            <div class="input-wrapper">
+                <span class="currency-symbol">$</span>
+                <input type="number" id="montoInput" placeholder="0.00" step="any" value="17.00">
+            </div>
+        </div>
+
+        <button id="calcularBtn">CALCULAR COMISIONES</button>
+
+        <div class="results" id="resultsArea">
+            <div class="result-row">
+                <span class="result-label" id="destinoLabel">➡️ Hay que enviar:</span>
+                <span class="result-value" id="destinoValor">$0.00</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">💸 Comisión PayPal (4.5%):</span>
+                <span class="result-value" id="comisionPaypal">$0.00</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">🏦 Comisión BDV (2.5%):</span>
+                <span class="result-value" id="comisionBDV">$0.00</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">💳 Total débito tarjeta BDV:</span>
+                <span class="result-value highlight" id="totalDebito">$0.00</span>
+            </div>
+        </div>
+        <div class="badge">✔️ Basado en comisiones: PayPal 4.5% fijo + BDV 2.5% adicional</div>
+    </div>
+    <div class="footer">
+        By. Licdo. Nelson Sánchez • Calculadora de uso personal</div>
+</div>
+
+<script>
+    // MODO: 'recibir' = calcular cuánto enviar para que llegue X neto (después de PayPal)
+    //       'enviar' = calcular cuánto recibe la otra persona cuando tú envías X bruto
+    let modoActual = 'recibir';
+
+    // Elementos DOM
+    const modoOptions = document.querySelectorAll('.modo-option');
+    const inputLabel = document.getElementById('inputLabel');
+    const montoInput = document.getElementById('montoInput');
+    const calcularBtn = document.getElementById('calcularBtn');
+    const destinoLabelSpan = document.getElementById('destinoLabel');
+    const destinoValorSpan = document.getElementById('destinoValor');
+    const comisionPaypalSpan = document.getElementById('comisionPaypal');
+    const comisionBDVSpan = document.getElementById('comisionBDV');
+    const totalDebitoSpan = document.getElementById('totalDebito');
+
+    // Redondeo preciso a 2 decimales
+    function roundToTwo(num) {
+        if (isNaN(num)) return 0;
+        return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatUSD(value) {
+        return '$' + value.toFixed(2);
+    }
+
+    // Función de cálculo principal
+    function calcular() {
+        let rawValue = parseFloat(montoInput.value);
+        if (isNaN(rawValue) || rawValue <= 0) {
+            destinoValorSpan.innerText = '$0.00';
+            comisionPaypalSpan.innerText = '$0.00';
+            comisionBDVSpan.innerText = '$0.00';
+            totalDebitoSpan.innerText = '$0.00';
+            return;
+        }
+
+        let monto = rawValue;
+        let enviar, recibe, comPayPal, comBDV, totalDebito;
+
+        if (modoActual === 'recibir') {
+            // MODO RECIBIR: La otra persona debe recibir neto = monto
+            // Fórmula: enviar = monto / (1 - 0.045) = monto / 0.955
+            enviar = monto / 0.955;
+            comPayPal = enviar - monto;            // 4.5% sobre enviado
+            comBDV = enviar * 0.025;                // 2.5% sobre lo enviado
+            totalDebito = enviar + comBDV;          // débito final en tarjeta BDV
+
+            destinoLabelSpan.innerHTML = '📤 Cantidad a ENVIAR:';
+            destinoValorSpan.innerText = formatUSD(roundToTwo(enviar));
+            comisionPaypalSpan.innerText = formatUSD(roundToTwo(comPayPal));
+            comisionBDVSpan.innerText = formatUSD(roundToTwo(comBDV));
+            totalDebitoSpan.innerText = formatUSD(roundToTwo(totalDebito));
+        } 
+        else { // modo 'enviar'
+            // MODO ENVIAR: Tú envías 'monto' (bruto), la otra persona recibe neto después de PayPal
+            enviar = monto;
+            recibe = enviar * 0.955;                // descuento 4.5% PayPal
+            comPayPal = enviar * 0.045;
+            comBDV = enviar * 0.025;
+            totalDebito = enviar + comBDV;
+
+            destinoLabelSpan.innerHTML = '✅ La otra persona RECIBE:';
+            destinoValorSpan.innerText = formatUSD(roundToTwo(recibe));
+            comisionPaypalSpan.innerText = formatUSD(roundToTwo(comPayPal));
+            comisionBDVSpan.innerText = formatUSD(roundToTwo(comBDV));
+            totalDebitoSpan.innerText = formatUSD(roundToTwo(totalDebito));
+        }
+    }
+
+    // Cambiar modo (recibir/enviar) y actualizar etiquetas y resultados
+    function setModo(modo) {
+        modoActual = modo;
+        // Actualizar estilo del switch
+        modoOptions.forEach(opt => {
+            const modoVal = opt.getAttribute('data-modo');
+            if (modoVal === modo) {
+                opt.classList.add('active');
+            } else {
+                opt.classList.remove('active');
+            }
+        });
+
+        // Ajustar texto de la etiqueta del input según modo
+        if (modo === 'recibir') {
+            inputLabel.innerText = '💰 Monto que la otra persona DEBE RECIBIR:';
+            montoInput.placeholder = 'Ej: 17.00';
+        } else {
+            inputLabel.innerText = '💵 Monto que TÚ VAS A ENVIAR (Sin comisiones):';
+            montoInput.placeholder = 'Ej: 12.47';
+        }
+
+        // Recalcular inmediatamente con el valor actual
+        calcular();
+    }
+
+    // Eventos: clic en opciones del modo
+    modoOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            const modoSeleccionado = opt.getAttribute('data-modo');
+            if (modoSeleccionado === 'recibir') setModo('recibir');
+            else setModo('enviar');
+        });
+    });
+
+    // Botón calcular
+    calcularBtn.addEventListener('click', () => {
+        calcular();
+    });
+
+    // Enter en el campo numérico
+    montoInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            calcular();
+        }
+    });
+
+    // También se puede actualizar al salir del campo (blur) para mayor fluidez
+    montoInput.addEventListener('blur', () => {
+        calcular();
+    });
+
+    // Inicialización: modo recibir con valor de ejemplo 17.00 (similar al Excel)
+    montoInput.value = '';
+    setModo('recibir');
+    
+    // Ajuste extra para que en pantallas muy pequeñas el contenido quede sin scroll vertical
+    // Se asegura que no haya desbordamiento indeseado
+    window.addEventListener('resize', () => {
+        // solo recalcular por si el input tiene valores raros, sin efecto visual extra
+        calcular();
+    });
+</script>
+</body>
+</html>
